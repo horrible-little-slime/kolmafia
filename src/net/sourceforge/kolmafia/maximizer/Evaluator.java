@@ -14,15 +14,10 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import net.sourceforge.kolmafia.AdventureResult;
-import net.sourceforge.kolmafia.FamiliarData;
-import net.sourceforge.kolmafia.KoLCharacter;
+
+import net.sourceforge.kolmafia.*;
 import net.sourceforge.kolmafia.KoLConstants.MafiaState;
 import net.sourceforge.kolmafia.KoLConstants.WeaponType;
-import net.sourceforge.kolmafia.KoLmafia;
-import net.sourceforge.kolmafia.Modifiers;
-import net.sourceforge.kolmafia.RequestLogger;
-import net.sourceforge.kolmafia.SpecialOutfit;
 import net.sourceforge.kolmafia.objectpool.EffectPool;
 import net.sourceforge.kolmafia.objectpool.FamiliarPool;
 import net.sourceforge.kolmafia.objectpool.ItemPool;
@@ -1672,7 +1667,7 @@ public class Evaluator {
         best.attachment = edPiece;
         bestEdPiece = Preferences.getString("edPiece");
         best.equipment[EquipmentManager.HAT] = edPiece;
-        best.setEdPiece(bestEdPiece);
+        best.setModeable(Modeable.EDPIECE, bestEdPiece);
 
         // Check each animal in Crown of Ed to see if they are worthwhile
         for (String[] ANIMAL : EdPieceCommand.ANIMAL) {
@@ -1684,7 +1679,7 @@ public class Evaluator {
           MaximizerSpeculation spec = new MaximizerSpeculation();
           spec.attachment = edPiece;
           spec.equipment[EquipmentManager.HAT] = edPiece;
-          spec.setEdPiece(animal);
+          spec.setModeable(Modeable.EDPIECE, animal);
           if (spec.compareTo(best) > 0) {
             best = spec.clone();
             bestEdPiece = animal;
@@ -1702,7 +1697,7 @@ public class Evaluator {
       best.attachment = snowsuit;
       bestSnowsuit = Preferences.getString("snowsuit");
       best.equipment[EquipmentManager.FAMILIAR] = snowsuit;
-      best.setSnowsuit(bestSnowsuit);
+      best.setModeable(Modeable.SNOWSUIT, bestSnowsuit);
 
       // Check each decoration in Snowsuit to see if they are worthwhile
       for (String[] DECORATION : SnowsuitCommand.DECORATION) {
@@ -1714,7 +1709,7 @@ public class Evaluator {
         MaximizerSpeculation spec = new MaximizerSpeculation();
         spec.attachment = snowsuit;
         spec.equipment[EquipmentManager.FAMILIAR] = snowsuit;
-        spec.setSnowsuit(decoration);
+        spec.setModeable(Modeable.SNOWSUIT, decoration);
         if (spec.compareTo(best) > 0) {
           best = spec.clone();
           bestSnowsuit = decoration;
@@ -1736,7 +1731,7 @@ public class Evaluator {
               + " "
               + Preferences.getString("retroCapeWashingInstructions");
       best.equipment[EquipmentManager.CONTAINER] = retroCape;
-      best.setRetroCape(bestRetroCape);
+      best.setModeable(Modeable.RETROCAPE, bestRetroCape);
 
       // Check each combination of cape settings to see if they are worthwhile
       for (String superhero : RetroCapeCommand.SUPERHEROS) {
@@ -1751,7 +1746,7 @@ public class Evaluator {
           MaximizerSpeculation spec = new MaximizerSpeculation();
           spec.attachment = retroCape;
           spec.equipment[EquipmentManager.CONTAINER] = retroCape;
-          spec.setRetroCape(config);
+          spec.setModeable(Modeable.RETROCAPE, config);
           if (spec.compareTo(best) > 0) {
             best = spec.clone();
             bestRetroCape = config;
@@ -1770,7 +1765,7 @@ public class Evaluator {
       best.attachment = backupCamera;
       bestBackupCamera = Preferences.getString("backupCameraMode");
       best.equipment[EquipmentManager.ACCESSORY3] = backupCamera;
-      best.setBackupCamera(bestBackupCamera);
+      best.setModeable(Modeable.BACKUPCAMERA, bestBackupCamera);
 
       // Check each mode to see if it is worthwhile
       for (String[] MODE : BackupCameraCommand.MODE) {
@@ -1783,7 +1778,7 @@ public class Evaluator {
         MaximizerSpeculation spec = new MaximizerSpeculation();
         spec.attachment = backupCamera;
         spec.equipment[EquipmentManager.ACCESSORY3] = backupCamera;
-        spec.setBackupCamera(mode);
+        spec.setModeable(Modeable.BACKUPCAMERA, mode);
         if (spec.compareTo(best) > 0) {
           best = spec.clone();
           bestBackupCamera = mode;
@@ -1800,7 +1795,7 @@ public class Evaluator {
       best.attachment = unbreakableUmbrella;
       bestUmbrella = Preferences.getString("umbrellaState");
       best.equipment[EquipmentManager.OFFHAND] = unbreakableUmbrella;
-      best.setUnbreakableUmbrella(bestUmbrella);
+      best.setModeable(Modeable.UMBRELLA, bestUmbrella);
 
       for (UmbrellaRequest.Form x : UmbrellaRequest.Form.values()) {
         String state = x.name;
@@ -1811,7 +1806,7 @@ public class Evaluator {
         MaximizerSpeculation spec = new MaximizerSpeculation();
         spec.attachment = unbreakableUmbrella;
         spec.equipment[EquipmentManager.OFFHAND] = unbreakableUmbrella;
-        spec.setUnbreakableUmbrella(state);
+        spec.setModeable(Modeable.UMBRELLA, state);
         if (spec.compareTo(best) > 0) {
           best = spec.clone();
           bestUmbrella = state;
@@ -1884,23 +1879,23 @@ public class Evaluator {
           spec.equipment[EquipmentManager.FOLDER5] = current.equipment[EquipmentManager.FOLDER5];
         } else if (itemId == ItemPool.CROWN_OF_ED) {
           if (bestEdPiece != null) {
-            spec.setEdPiece(bestEdPiece);
+            spec.setModeable(Modeable.EDPIECE, bestEdPiece);
           }
         } else if (itemId == ItemPool.SNOW_SUIT) {
           if (bestSnowsuit != null) {
-            spec.setSnowsuit(bestSnowsuit);
+            spec.setModeable(Modeable.SNOWSUIT, bestSnowsuit);
           }
         } else if (itemId == ItemPool.KNOCK_OFF_RETRO_SUPERHERO_CAPE) {
           if (bestRetroCape != null) {
-            spec.setRetroCape(bestRetroCape);
+            spec.setModeable(Modeable.RETROCAPE, bestRetroCape);
           }
         } else if (itemId == ItemPool.BACKUP_CAMERA) {
           if (bestBackupCamera != null) {
-            spec.setBackupCamera(bestBackupCamera);
+            spec.setModeable(Modeable.BACKUPCAMERA, bestBackupCamera);
           }
         } else if (itemId == ItemPool.UNBREAKABLE_UMBRELLA) {
           if (bestUmbrella != null) {
-            spec.setUnbreakableUmbrella(bestUmbrella);
+            spec.setModeable(Modeable.UMBRELLA, bestUmbrella);
           }
         } else if (itemId == ItemPool.COWBOY_BOOTS) {
           MaximizerSpeculation current = new MaximizerSpeculation();
@@ -2387,23 +2382,23 @@ public class Evaluator {
     }
 
     if (spec.equipment[EquipmentManager.HAT] == null) {
-      spec.setEdPiece(bestEdPiece);
+      spec.setModeable(Modeable.EDPIECE, bestEdPiece);
     }
 
     if (spec.equipment[EquipmentManager.CONTAINER] == null) {
-      spec.setRetroCape(bestRetroCape);
+      spec.setModeable(Modeable.RETROCAPE, bestRetroCape);
     }
 
     if (spec.equipment[EquipmentManager.ACCESSORY3] == null) {
-      spec.setBackupCamera(bestBackupCamera);
+      spec.setModeable(Modeable.BACKUPCAMERA, bestBackupCamera);
     }
 
     if (spec.equipment[EquipmentManager.OFFHAND] == null) {
-      spec.setUnbreakableUmbrella(bestUmbrella);
+      spec.setModeable(Modeable.UMBRELLA, bestUmbrella);
     }
 
     if (spec.equipment[EquipmentManager.FAMILIAR] == null) {
-      spec.setSnowsuit(bestSnowsuit);
+      spec.setModeable(Modeable.SNOWSUIT, bestSnowsuit);
     }
 
     spec.tryAll(
