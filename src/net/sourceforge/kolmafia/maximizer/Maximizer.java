@@ -1,10 +1,6 @@
 package net.sourceforge.kolmafia.maximizer;
 
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import net.java.dev.spellcast.utilities.LockableListModel;
 import net.sourceforge.kolmafia.*;
 import net.sourceforge.kolmafia.moods.MoodManager;
@@ -1551,31 +1547,15 @@ public class Maximizer {
 
     boolean changeEnthroned = itemId == ItemPool.HATSEAT && enthroned != currEnthroned;
     boolean changeBjorned = itemId == ItemPool.BUDDY_BJORN && bjorned != currBjorned;
-    boolean changeRetroCape =
-        itemId == ItemPool.KNOCK_OFF_RETRO_SUPERHERO_CAPE
-            && retroCape != null
-            && !retroCape.equals(currRetroCape);
-    boolean changeBackupCamera =
-        itemId == ItemPool.BACKUP_CAMERA
-            && backupCamera != null
-            && !backupCamera.equals(currBackupCamera);
-    boolean changeUmbrella =
-        itemId == ItemPool.UNBREAKABLE_UMBRELLA
-            && unbreakableUmbrella != null
-            && !unbreakableUmbrella.equals(currUmbrella);
-    boolean changeEdPiece =
-        itemId == ItemPool.CROWN_OF_ED && edPiece != null && !edPiece.equals(currEdPiece);
-    boolean changeSnowSuit =
-        itemId == ItemPool.SNOW_SUIT && snowsuit != null && !snowsuit.equals(currSnowsuit);
+    Optional<Modeable> modeableToChange =
+        Arrays.stream(Modeable.values())
+            .filter((m) -> modeables.get(m) != currentModeables.get(m))
+            .findFirst();
 
     if (curr.equals(item)
         && !changeEnthroned
         && !changeBjorned
-        && !changeEdPiece
-        && !changeSnowSuit
-        && !(changeRetroCape)
-        && !(changeBackupCamera)
-        && !(changeUmbrella)
+        && modeableToChange.isEmpty()
         && !(itemId == ItemPool.BROKEN_CHAMPAGNE
             && Preferences.getInteger("garbageChampagneCharge") == 0
             && !Preferences.getBoolean("_garbageItemChanged"))
@@ -1619,32 +1599,11 @@ public class Maximizer {
       } else if (changeBjorned) {
         cmd = "bjornify " + bjorned.getRace();
         text = cmd;
-      } else if (changeEdPiece) {
-        cmd = "edpiece " + edPiece;
-        text = cmd;
-        setEdPiece = true;
-      } else if (changeSnowSuit) {
-        cmd = "snowsuit " + snowsuit;
-        text = cmd;
-        setSnowsuit = true;
-      } else if (changeRetroCape) {
-        cmd = "retrocape " + retroCape;
-        text = cmd;
-        setRetroCape = true;
-      } else if (changeBackupCamera) {
-        cmd = "backupcamera " + backupCamera + "; equip " + slotname + " \u00B6" + item.getItemId();
-        text = "backupcamera " + backupCamera;
-        setBackupCamera = true;
-      } else if (changeUmbrella) {
-        cmd =
-            "umbrella "
-                + unbreakableUmbrella
-                + "; equip "
-                + slotname
-                + " \u00B6"
-                + item.getItemId();
-        text = "umbrella " + unbreakableUmbrella;
-        setUmbrella = true;
+      } else if (modeableToChange.isPresent()) {
+        Modeable m = modeableToChange.get();
+        setModeables.put(m, true);
+        text = m.getCommand() + " " + modeables.get(m);
+        cmd = text + "; equip " + slotname + " \u00B6" + item.getItemId();
       } else {
         cmd = "equip " + slotname + " \u00B6" + item.getItemId();
         text = "equip " + slotname + " " + item.getName();
@@ -1778,25 +1737,9 @@ public class Maximizer {
       text = text + KoLConstants.MODIFIER_FORMAT.format(delta) + ")";
     }
 
-    if (!setEdPiece) {
-      edPiece = null;
-    }
-
-    if (!setSnowsuit) {
-      snowsuit = null;
-    }
-
-    if (!setRetroCape) {
-      retroCape = null;
-    }
-
-    if (!setBackupCamera) {
-      backupCamera = null;
-    }
-
-    if (!setUmbrella) {
-      unbreakableUmbrella = null;
-    }
+    setModeables.forEach((m, isSet) -> {if (!isSet) {
+      modeables.put(m, null);
+    }});
 
     Boost boost =
         new Boost(
@@ -1807,11 +1750,7 @@ public class Maximizer {
             delta,
             enthroned,
             bjorned,
-            edPiece,
-            snowsuit,
-            retroCape,
-            backupCamera,
-            unbreakableUmbrella);
+            modeables);
     if (equipScope == -1) { // called from CLI
       boost.execute(true);
       if (!KoLmafia.permitsContinue()) {
