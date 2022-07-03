@@ -1547,15 +1547,16 @@ public class Maximizer {
 
     boolean changeEnthroned = itemId == ItemPool.HATSEAT && enthroned != currEnthroned;
     boolean changeBjorned = itemId == ItemPool.BUDDY_BJORN && bjorned != currBjorned;
-    Optional<Modeable> modeableToChange =
+    Modeable modeableToChange =
         Arrays.stream(Modeable.values())
             .filter((m) -> modeables.get(m) != currentModeables.get(m))
-            .findFirst();
+            .findFirst()
+            .orElse(null);
 
     if (curr.equals(item)
         && !changeEnthroned
         && !changeBjorned
-        && modeableToChange.isEmpty()
+        && modeableToChange == null
         && !(itemId == ItemPool.BROKEN_CHAMPAGNE
             && Preferences.getInteger("garbageChampagneCharge") == 0
             && !Preferences.getBoolean("_garbageItemChanged"))
@@ -1599,10 +1600,9 @@ public class Maximizer {
       } else if (changeBjorned) {
         cmd = "bjornify " + bjorned.getRace();
         text = cmd;
-      } else if (modeableToChange.isPresent()) {
-        Modeable m = modeableToChange.get();
-        setModeables.put(m, true);
-        text = m.getCommand() + " " + modeables.get(m);
+      } else if (modeableToChange != null) {
+        setModeables.put(modeableToChange, true);
+        text = modeableToChange.getCommand() + " " + modeables.get(modeableToChange);
         cmd = text + "; equip " + slotname + " \u00B6" + item.getItemId();
       } else {
         cmd = "equip " + slotname + " \u00B6" + item.getItemId();
@@ -1737,20 +1737,14 @@ public class Maximizer {
       text = text + KoLConstants.MODIFIER_FORMAT.format(delta) + ")";
     }
 
-    setModeables.forEach((m, isSet) -> {if (!isSet) {
-      modeables.put(m, null);
-    }});
+    setModeables.forEach(
+        (m, isSet) -> {
+          if (!isSet) {
+            modeables.put(m, null);
+          }
+        });
 
-    Boost boost =
-        new Boost(
-            cmd,
-            text,
-            slot,
-            item,
-            delta,
-            enthroned,
-            bjorned,
-            modeables);
+    Boost boost = new Boost(cmd, text, slot, item, delta, enthroned, bjorned, modeables);
     if (equipScope == -1) { // called from CLI
       boost.execute(true);
       if (!KoLmafia.permitsContinue()) {
