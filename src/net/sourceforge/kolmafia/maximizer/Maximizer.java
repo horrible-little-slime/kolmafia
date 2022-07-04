@@ -1547,16 +1547,13 @@ public class Maximizer {
 
     boolean changeEnthroned = itemId == ItemPool.HATSEAT && enthroned != currEnthroned;
     boolean changeBjorned = itemId == ItemPool.BUDDY_BJORN && bjorned != currBjorned;
-    Modeable modeableToChange =
-        Arrays.stream(Modeable.values())
-            .filter((m) -> modeables.get(m) != currentModeables.get(m))
-            .findFirst()
-            .orElse(null);
-
+    var modeable = Modeable.find(itemId);
+    boolean changeModeable =
+        modeable != null && modeables.get(modeable) != currentModeables.get(modeable);
     if (curr.equals(item)
         && !changeEnthroned
         && !changeBjorned
-        && modeableToChange == null
+        && !changeModeable
         && !(itemId == ItemPool.BROKEN_CHAMPAGNE
             && Preferences.getInteger("garbageChampagneCharge") == 0
             && !Preferences.getBoolean("_garbageItemChanged"))
@@ -1578,12 +1575,8 @@ public class Maximizer {
       spec.setEnthroned(enthroned);
     } else if (itemId == ItemPool.BUDDY_BJORN) {
       spec.setBjorned(bjorned);
-    } else {
-      var modeable = Modeable.find(itemId);
-
-      if (modeable != null) {
-        spec.setModeable(modeable, modeables.get(modeable));
-      }
+    } else if (modeable != null) {
+      spec.setModeable(modeable, modeables.get(modeable));
     }
 
     double delta = spec.getScore() - current;
@@ -1600,9 +1593,9 @@ public class Maximizer {
       } else if (changeBjorned) {
         cmd = "bjornify " + bjorned.getRace();
         text = cmd;
-      } else if (modeableToChange != null) {
-        setModeables.put(modeableToChange, true);
-        text = modeableToChange.getCommand() + " " + modeables.get(modeableToChange);
+      } else if (changeModeable) {
+        setModeables.put(modeable, true);
+        text = modeable.getCommand() + " " + modeables.get(modeable);
         cmd = text + "; equip " + slotname + " \u00B6" + item.getItemId();
       } else {
         cmd = "equip " + slotname + " \u00B6" + item.getItemId();
