@@ -1487,8 +1487,8 @@ public class KoLAdventure implements Comparable<KoLAdventure>, Runnable {
 
     // The following zones depend on your clan, your permissions, and the
     // current state of clan dungeons. We're not going to touch them here.
-    if (zone.equals("Clan Basement") || zone.equals("Hobopolis") || zone.equals("Dreadsylvania")) {
-      return true;
+    if (parentZone.equals("Clan Basement")) {
+      return false;
     }
 
     // Holiday zones
